@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://auth.dinglevalley.net/">
+    <meta property="og:site_name" content="Dingle Valley">
+    <meta property="og:keywords" content="Dingle valley,Self promotion,Promote discord,Promote youtube,Promote discord servers,
+    Self promotion software,Self-promotion,promote online,Promote twitch,Discord servers">
+    <meta data-react-helmet="true" property="og:title" content="Dingle Valley | Your go to spot for Self-promotion">
+    <meta data-react-helmet="true" property="og:description" content="Dingle valley is the easiest way to get more users to, join your discord servers, subscribe to your twitch or youtube channels, join your game servers and more.">
+    <meta data-react-helmet="true" name="description" content="Dingle valley is the easiest way to get more users to, join your discord servers, subscribe to your twitch or youtube channels, join your game servers and more.">
+    <link rel="stylesheet" href="~/css/app.css" />
+</head>
+<body class="bg-gray-900 text-gray-900 font-sans">
+    <div class="relative min-h-screen text-center mb-2">
+        <!-- stripes -->
+
+        <img class="mx-auto h-16 md:h-24 lg:h-28 xl:h-32 2xl:h-40" src="~/imgs/panda.png" />
+
+        <!-- content -->
+        <div class="relative">
+            <div class="pt-5">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <!-- footer -->
+    <div class="bottom-0 inset-x-0">
+        <div class="flex justify-center">
+            <a class="no-underline text-yellow-400 hover:text-yellow-300" asp-action="Index" asp-controller="Home">
+                <p class="text-center mt-5 ml-2 font-extrabold">Home</p>
+            </a>
+            <a class="no-underline text-yellow-400 hover:text-yellow-300" asp-action="Privacy" asp-controller="Home">
+                <p class="text-center mt-5 ml-2 font-extrabold">Privacy Policy</p>
+            </a>
+        </div>
+        <p class="text-center text-yellow-400 mt-5 ml-2 font-extrabold pb-3">&copy; @DateTime.Now.Year, Dingle Inc.</p>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="~/lib/hammer.js/hammer.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

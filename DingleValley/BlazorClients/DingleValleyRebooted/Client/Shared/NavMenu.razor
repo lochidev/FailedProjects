@@ -1,0 +1,76 @@
+﻿<!-- mobile menu bar -->
+@inject SignOutSessionStateManager SignOutManager
+@inject NavigationManager Navigation
+<div class="bg-gray-800 text-gray-100 flex justify-between md:hidden">
+	<!-- logo -->
+	<a href="#" class="block pt-6 p-4 text-blue-500 font-extrabold">Dingle Valley</a>
+
+	<!-- mobile menu button -->
+	<button class="p-4 focus:outline-none focus:bg-gray-700" @onclick="ToggleNavMenu" @onfocusout="FocusOut">
+		<svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+		</svg>
+	</button>
+</div>
+
+<!-- sidebar -->
+<div class="z-50 bg-gray-800 text-blue-400 w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform @SideMenuCssClass md:relative md:translate-x-0 transition duration-200 ease-in-out">
+
+	<!-- logo -->
+	<a href="" class="text-blue-500 flex items-center space-x-2 px-4">
+		<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+			<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+		</svg>
+		<span class="text-2xl font-extrabold">Dingle Valley</span>
+	</a>
+
+	<!-- nav -->
+	<nav>
+		<NavLink href="" Match="NavLinkMatch.All" ActiveClass="bg-gray-700 animate-pulse" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+			Home
+		</NavLink>
+		<NavLink href="search" Match="NavLinkMatch.All" ActiveClass="bg-gray-700 animate-pulse" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+			Categories
+		</NavLink>
+		<NavLink href="makepost" Match="NavLinkMatch.All" ActiveClass="bg-gray-700 animate-pulse" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+			Make a post
+		</NavLink>
+		<AuthorizeView>
+			<Authorized>
+				<div class="flex">
+					<a href="profile" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+						Hello, @context.User.Identity.Name!
+					</a>
+					<button @onclick="BeginSignOut" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+						Log out
+					</button>
+				</div>
+			</Authorized>
+			<NotAuthorized>
+				<a href="authentication/login" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+					Log in
+				</a>
+			</NotAuthorized>
+		</AuthorizeView>
+	</nav>
+</div>
+  @code {
+	private bool collapse = true;
+
+	private string SideMenuCssClass => collapse ? "-translate-x-full" : null;
+
+	private void ToggleNavMenu()
+	{
+		collapse = !collapse;
+	}
+	private async Task BeginSignOut(MouseEventArgs args)
+	{
+		await SignOutManager.SetSignOutState();
+		Navigation.NavigateTo("authentication/logout");
+	}
+	private async Task FocusOut()
+	{
+		await Task.Delay(50);
+		collapse = true;
+	}
+  }

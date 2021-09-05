@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option csharp_namespace = "NotificationService";
+
+package notify;
+
+
+service Notifier {
+	rpc RegisterUser (RegisterUserRequest) returns (RegisterUserResponse);
+	rpc NotifyUser (NotifyUserRequest) returns (NotifyUserReponse);	
+}
+message RegisterUserRequest{
+	string user_id = 1;
+	string fcm_token = 2;
+}
+message RegisterUserResponse{
+	bool success = 1;
+}
+message NotifyUserRequest{
+	string user_id = 1;
+	string title = 2;
+	string description = 3;
+	string data = 4;
+}
+message NotifyUserReponse{
+	bool success = 1;
+}

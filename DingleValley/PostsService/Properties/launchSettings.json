@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "PostsService": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": "true",
+      "applicationUrl": "http://localhost:5000;https://localhost:5001"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:49155",
+      "publishAllPorts": true,
+      "useSSL": true,
+      "DockerfileRunArguments": ""
+    }
+  }
+}

@@ -1,0 +1,56 @@
+﻿@inject IHttpClientFactory ClientFactory
+<div class="@BackgroundCss mt-3 w-full p-3 pb-10 sm:p-10 mb-5 rounded-xl shadow-lg text-yellow-500 text-xl font-extrabold text-center">
+    @if (Initializing)
+    {
+        <div class="flex mx-auto">
+            <svg class="animate-spin -ml-1 mt-1 mr-3 h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="--darkreader-inline-fill:none;" data-darkreader-inline-fill="">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="--darkreader-inline-stroke:currentColor;" data-darkreader-inline-stroke=""></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style="--darkreader-inline-fill:currentColor;" data-darkreader-inline-fill=""></path>
+            </svg>
+            <h3>Loading...</h3>
+        </div>
+    }
+    else if (string.IsNullOrEmpty(Error))
+    {
+        <h3 class="text-blue-500 text-2xl mb-3">User stats</h3>
+        <div class="flex flex-1 w-full space-x-3 md:space-x-5">
+            <div class="w-1/2">
+                <div class="bg-pink-800 p-10 rounded-xl h-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" width="192" height="181" viewBox="0 0 192 181" fill="none">
+                        <g clip-path="url(#clip0)">
+                            <path d="M184.439 86.504C184.68 133.697 145.504 172.204 96.876 172.452C48.2486 172.7 8.68183 134.595 8.44114 87.4016C8.20045 40.2085 47.3765 1.70189 96.0039 1.45389C144.631 1.20588 184.198 39.3109 184.439 86.504Z" fill="#C9887A" stroke="black" stroke-width="2" />
+                            <path d="M183.971 92.8177C184.193 136.283 149.321 171.684 106.1 171.905C62.879 172.125 27.6483 137.081 27.4267 93.6161C27.205 50.1506 62.0763 14.7495 105.298 14.5291C148.519 14.3087 183.749 49.3523 183.971 92.8177Z" fill="#BFB809" stroke="black" stroke-width="3" />
+                            <path d="M99.1747 129.311C98.8709 129.412 98.6687 129.31 98.568 129.006L77.9879 66.3472C77.9073 66.1042 77.9885 65.9424 78.2315 65.8618L95.2405 60.1192C98.5614 58.9504 101.861 58.7327 105.138 59.4662C108.476 60.1795 111.429 61.6613 113.996 63.9117C116.543 66.1012 118.37 68.8665 119.478 72.2076L128.152 98.3587C129.321 101.882 129.538 105.384 128.804 108.863C128.05 112.283 126.528 115.316 124.237 117.964C121.946 120.612 119.019 122.561 115.455 123.81L99.1747 129.311ZM106.118 114.567L111.768 112.693C114.015 111.948 115.636 110.534 116.631 108.451C117.687 106.347 117.852 104.202 117.127 102.016L108.423 75.7733C107.778 73.8294 106.495 72.4007 104.574 71.4871C102.693 70.4926 100.791 70.348 98.8671 71.0535L92.519 73.2602L106.118 114.567Z" fill="#300240" />
+                        </g>
+                        <defs>
+                            <clipPath id="clip0">
+                                <rect width="190.043" height="179.065" fill="white" transform="translate(0.959045 0.969227) rotate(-0.292211)" />
+                            </clipPath>
+                        </defs>
+                    </svg>
+                    <h3>@UserStats.Coins Coins</h3>
+                </div>
+            </div>
+            <div class="w-1/2">
+                <div class="bg-pink-800 p-2 md:p-10 rounded-xl h-full">
+                    <h3 class="mt-6 md:mt-3">@SubscriptionText</h3>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <h3>@Error</h3>
+    }
+
+</div>
+@code {
+    [Parameter]
+    public UserStats UserStats { get; set; }
+    [Parameter]
+    public bool Initializing { get; set; }
+    [Parameter]
+    public string Error { get; set; }
+    private string SubscriptionText => UserStats.IsPartner ? "You are a partner" : (UserStats.IsPremium ? "You are subscribed, Woohoo!" : "You have not subscribed to any plans :(");
+    private string BackgroundCss => (UserStats.IsPremium || UserStats.IsPartner) ? "bg-gradient-to-r from-green-700 via-blue-900 to-pink-500 animate-gradient-x 2xl:col-span-2" : "bg-indigo-900";
+}

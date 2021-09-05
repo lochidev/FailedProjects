@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <UserSecretsId>eb0928e0-33ae-4592-968a-bb1c43c6a386</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.38.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.11.1" />
+    <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="3.1.0" />
+    <PackageReference Include="OpenIddict.Validation.SystemNetHttp" Version="3.1.0" />
+    <PackageReference Include="Profanity.Detector" Version="0.1.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\..\BanService\BanService\BanService\Protos\ban.proto" GrpcServices="Client">
+      <Link>Protos\ban.proto</Link>
+    </Protobuf>
+    <Protobuf Include="..\..\CoinService\CoinService\Protos\coiner.proto" GrpcServices="Client">
+      <Link>Protos\coiner.proto</Link>
+    </Protobuf>
+    <Protobuf Include="..\..\NotificationService\NotificationService\NotificationService\Protos\notify.proto" GrpcServices="Client">
+      <Link>Protos\notify.proto</Link>
+    </Protobuf>
+    <Protobuf Include="..\..\PostsService\PostsService\Protos\posts.proto" GrpcServices="Client">
+      <Link>Protos\posts.proto</Link>
+    </Protobuf>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="coiner.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Extensions\" />
+  </ItemGroup>
+
+</Project>

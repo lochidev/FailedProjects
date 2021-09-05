@@ -1,0 +1,157 @@
+﻿@page "/"
+@implements IDisposable
+@inject IHttpClientFactory ClientFactory
+@inject ComponentApplicationState ApplicationState
+<h3 class="text-3xl font-bold text-center pb-4">featured</h3>
+@if (newNotificationMessage is not null && newNotificationState)
+{
+	@if (notificationSuccess)
+	{
+		<div class="bg-green-100 mb-2 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+			<strong class="font-bold">Yay!</strong>
+			<span class="block sm:inline">@newNotificationMessage</span>
+			<span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+				<svg @onclick="ResetNotificationState" class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" /></svg>
+			</span>
+		</div>
+	}
+	else
+	{
+		<div class="bg-red-100 mb-2 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+			<strong class="font-bold">Oh no!</strong>
+			<span class="block sm:inline">@newNotificationMessage</span>
+			<span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+				<svg @onclick="ResetNotificationState" class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" /></svg>
+			</span>
+		</div>
+	}
+}
+<div class="@AnimationCss">
+	@if (isInitializing)
+	{
+		<h2 class="text-2xl font-bold text-center p-2 py-72">Loading...</h2>
+	}
+	else if (error is not null)
+	{
+		<h2 class="text-2xl font-bold text-center p-2 py-72">@error</h2>
+	}
+	else if (posts.Count == 0)
+	{
+		<h2 class="text-2xl font-bold text-center p-2 py-72">We are sorry but we found nothing :(</h2>
+	}
+	else
+	{
+		<div class="grid 2xl:grid-cols-3 gap-4">
+
+			@foreach (var post in posts)
+			{
+				<PostComponent ShowOptions="ShowOptions(post)" OnError="ShowErrorMessage" OnSuccess="ShowSuccessMessage" Post="post"
+					   RewardClaimed="HasClaimedReward(post.PostId)"></PostComponent>
+			}
+		</div>
+	}
+</div>
+
+
+
+@code {
+	[CascadingParameter]
+	private Task<AuthenticationState> authenticationStateTask { get; set; }
+	private bool isInitializing = true;
+	private string error;
+	private string AnimationCss => isInitializing ? "animate-pulse" : null;
+	private HashSet<Post> posts = new();
+	private string newNotificationMessage;
+	private bool newNotificationState = false;
+	private bool notificationSuccess = false;
+	private AuthenticationState authState;
+	private Dictionary<string, bool> claimedDictionary;
+	protected override async Task OnInitializedAsync()
+	{
+		authState = await authenticationStateTask;
+		ApplicationState.OnPersisting += PersistPosts;
+		if (!ApplicationState.TryTakeAsJson<HashSet<Post>>("posts", out posts))
+		{
+			var client = ClientFactory.CreateClient("Public");
+			try
+			{
+				posts = await client.GetFromJsonAsync<HashSet<Post>>("api/main/getfeed");
+			}
+			catch (Exception)
+			{
+				error = "Something went wrong! Server might've gone kaboom! Please try again later!";
+			}
+		}
+		else
+		{
+			ResetNotificationState();
+			ShowSuccessMessage("Application loaded successfully!");
+		}
+		if (authState.User.Identity.IsAuthenticated)
+		{
+			try
+			{
+				var client = ClientFactory.CreateClient("WebAPI");
+				HashSet<string> postIds = posts.Select(x => x.PostId).ToHashSet();
+				var response = await client.PostAsJsonAsync("Api/Posts/HasClaimedReward", postIds);
+				if (response.IsSuccessStatusCode)
+				{
+					string content = await response.Content.ReadAsStringAsync();
+					claimedDictionary = JsonSerializer.Deserialize<Dictionary<string, bool>>(content);
+				}
+			}
+			catch (Exception)
+			{
+				claimedDictionary = new();
+			}
+		}
+		isInitializing = false;
+	}
+	private void ShowErrorMessage(string errorMsg)
+	{
+		newNotificationMessage = errorMsg;
+		newNotificationState = true;
+	}
+	private void ShowSuccessMessage(string msg)
+	{
+		newNotificationMessage = msg;
+		newNotificationState = true;
+		notificationSuccess = true;
+	}
+	private void ResetNotificationState()
+	{
+		newNotificationState = false;
+		notificationSuccess = false;
+	}
+	private bool ShowOptions(Post post)
+	{
+		var user = authState.User;
+		if (user.Identity.IsAuthenticated)
+		{
+			return (user.Identity.Name.ToLower() == post.OwnerUserId.ToLower());
+		}
+		else
+		{
+			return false;
+		}
+	}
+	private bool HasClaimedReward(string postId)
+	{
+		bool found = false;
+		if (claimedDictionary is not null && claimedDictionary.Count > 0)
+		{
+			claimedDictionary.TryGetValue(postId, out found);
+		}
+		return found;
+	}
+	private Task PersistPosts()
+	{
+		ApplicationState.PersistAsJson("posts", posts);
+
+		return Task.CompletedTask;
+	}
+	void IDisposable.Dispose()
+	{
+		ApplicationState.OnPersisting -= PersistPosts;
+	}
+}

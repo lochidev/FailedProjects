@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option csharp_namespace = "BillingService";
+
+package biller;
+
+service Biller {
+  rpc MakeInvoice (NewInvoiceRequest) returns (NewInvoiceResponse);
+  rpc GetInvoiceStatus (InvoiceRequest) returns (InvoiceResponse);
+}
+message NewInvoiceRequest{
+	int32 serviceId = 1;
+	string amount = 2;
+	string currency = 3;
+	string redirectUrl = 4;
+	string orderId = 5;
+}
+message NewInvoiceResponse{
+	bool successful = 1; 
+	string invoiceId = 2;
+	string checkOutUrl = 3;
+}
+message InvoiceRequest {
+	string id = 1;
+}
+message InvoiceResponse {
+	bool isCompleted = 1;
+	string status = 2;
+}

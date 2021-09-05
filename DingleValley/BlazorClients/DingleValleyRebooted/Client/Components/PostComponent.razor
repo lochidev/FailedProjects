@@ -1,0 +1,161 @@
+﻿@inject IHttpClientFactory ClientFactory
+<div class="@BackgroundCss @ColSpanCss shadow p-10 rounded-lg font-bold">
+    <p class="text-blue-400 text-xl mb-5 pr-5">@Post.Title</p>
+    <p class="text-green-300 text-lg mb-5 pr-5 break-all">@Post.Content</p>
+    <div class="flex">
+        @if (Post.Content is not null && Post.Content.Contains("https://"))
+        {
+            <a target="_blank" @onclick="ClaimReward" href="@GetLink(Post)" class="bg-green-700 mr-6 hover:bg-pink-500 hover:text-gray-900 text-blue-900 font-bold py-2 px-4 rounded-md">Open Link</a>
+        }
+        @if (ShowOptions)
+        {
+            <PostOptionsComponent OnError="OnErrorHandler" OnSuccess="OnSuccessHandler" PostId="@Post.PostId" PostCategory="@Post.Category"></PostOptionsComponent>
+        }
+    </div>
+    @if (authState.User.Identity.IsAuthenticated && authState.User.Identity.Name.ToLower() != Post.OwnerUserId.ToLower())
+    {
+        <div class="flex bg-pink-700 rounded-lg text-yellow-500 font-bold p-3 mt-5 space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" width="192" height="181" viewBox="0 0 192 181" fill="none">
+            <g clip-path="url(#clip0)">
+                <path d="M184.439 86.504C184.68 133.697 145.504 172.204 96.876 172.452C48.2486 172.7 8.68183 134.595 8.44114 87.4016C8.20045 40.2085 47.3765 1.70189 96.0039 1.45389C144.631 1.20588 184.198 39.3109 184.439 86.504Z" fill="#C9887A" stroke="black" stroke-width="2" />
+                <path d="M183.971 92.8177C184.193 136.283 149.321 171.684 106.1 171.905C62.879 172.125 27.6483 137.081 27.4267 93.6161C27.205 50.1506 62.0763 14.7495 105.298 14.5291C148.519 14.3087 183.749 49.3523 183.971 92.8177Z" fill="#BFB809" stroke="black" stroke-width="3" />
+                <path d="M99.1747 129.311C98.8709 129.412 98.6687 129.31 98.568 129.006L77.9879 66.3472C77.9073 66.1042 77.9885 65.9424 78.2315 65.8618L95.2405 60.1192C98.5614 58.9504 101.861 58.7327 105.138 59.4662C108.476 60.1795 111.429 61.6613 113.996 63.9117C116.543 66.1012 118.37 68.8665 119.478 72.2076L128.152 98.3587C129.321 101.882 129.538 105.384 128.804 108.863C128.05 112.283 126.528 115.316 124.237 117.964C121.946 120.612 119.019 122.561 115.455 123.81L99.1747 129.311ZM106.118 114.567L111.768 112.693C114.015 111.948 115.636 110.534 116.631 108.451C117.687 106.347 117.852 104.202 117.127 102.016L108.423 75.7733C107.778 73.8294 106.495 72.4007 104.574 71.4871C102.693 70.4926 100.791 70.348 98.8671 71.0535L92.519 73.2602L106.118 114.567Z" fill="#300240" />
+            </g>
+            <defs>
+                <clipPath id="clip0">
+                    <rect width="190.043" height="179.065" fill="white" transform="translate(0.959045 0.969227) rotate(-0.292211)" />
+                </clipPath>
+            </defs>
+        </svg>
+        <p>@RewardText</p>
+    </div>
+    }
+</div>
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    [Parameter]
+    public Post Post { get; set; }
+    [Parameter]
+    public EventCallback<string> OnError { get; set; }
+    [Parameter]
+    public EventCallback<string> OnSuccess { get; set; }
+    [Parameter]
+    public bool ShowOptions { get; set; } = false;
+    [Parameter]
+    public bool RewardClaimed { get; set; } = false;
+    [Parameter]
+    public bool IsPreview { get; set; } = false;
+    private string RewardText => RewardClaimed ? "You have claimed this reward :)" : Post.Clouts == 0 ? "Interact to collect (100-200) coins 😮" : $"Interact to collect {Post.Clouts} coins 😮";
+    private string BackgroundCss => Post.PostConfiguration.HasGradient ? $"bg-gradient-to-r {PrimaryCss} {SecondaryCss} {TertiaryCss} animate-gradient-x" : "bg-gray-700";
+    private string ColSpanCss => Post.PostConfiguration.ColumnSize == 2 ? "2xl:col-span-2" : null;
+    public static readonly Regex linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private AuthenticationState authState;
+    private string PrimaryCss => Post.PostConfiguration.PrimaryColor is null ? "from-green-700" : GetColorCss("Primary", Post.PostConfiguration.PrimaryColor);
+    private string SecondaryCss => Post.PostConfiguration.SecondaryColor is null ? "via-blue-900" : GetColorCss("Secondary", Post.PostConfiguration.SecondaryColor);
+    private string TertiaryCss => Post.PostConfiguration.TertiaryColor is null ? "to-green-500" : GetColorCss("Tertiary", Post.PostConfiguration.TertiaryColor);
+    protected override async Task OnInitializedAsync()
+    {
+        authState = await authenticationStateTask;
+    }
+    private string GetLink(Post post)
+    {
+        string content = post.Content;
+        foreach (Match m in linkParser.Matches(content))
+        {
+            return m.Value;
+        }
+        return null;
+    }
+    private async Task OnErrorHandler(string error)
+    {
+        await OnError.InvokeAsync(error);
+    }
+    private async Task OnSuccessHandler(string msg)
+    {
+        await OnSuccess.InvokeAsync(msg);
+    }
+    private async Task ClaimReward()
+    {
+        var user = authState.User;
+        if(IsPreview || user.Identity.Name.ToLower() == Post.OwnerUserId.ToLower())
+        {
+            return;
+        }
+        if (user.Identity.IsAuthenticated)
+        {
+            try
+            {
+                var client = ClientFactory.CreateClient("WebAPI");
+                var response = await client.GetAsync($"Api/Posts/ClaimReward?postId={Post.PostId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    RewardClaimed = true;
+                }
+                else
+                {
+                    await OnError.InvokeAsync("Could not claim reward, you may have claimed it earlier :(");
+                }
+            }
+            catch (AccessTokenNotAvailableException)
+            {
+                await OnError.InvokeAsync("User not authenticated :(");
+            }
+        }
+        else
+        {
+            await OnError.InvokeAsync("Login to claim rewards :(");
+        }
+    }
+    private string GetColorCss(string mode, string color)
+    {
+        switch (mode)
+        {
+            case "Primary":
+                switch (color)
+                {
+                    case "red":
+                        return "from-red-700";
+                    case "blue":
+                        return "from-blue-700";
+                    case "green":
+                        return "from-green-700";
+                    case "pink":
+                        return "from-pink-700";
+                    default:
+                        return null;
+                }
+            case "Secondary":
+                switch (color)
+                {
+                    case "red":
+                        return "via-red-900";
+                    case "blue":
+                        return "via-blue-900";
+                    case "green":
+                        return "via-green-900";
+                    case "pink":
+                        return "via-pink-900";
+                    default:
+                        return null;
+                }
+            case "Tertiary":
+                switch (color)
+                {
+                    case "red":
+                        return "to-red-500";
+                    case "blue":
+                        return "to-blue-500";
+                    case "green":
+                        return "to-green-500";
+                    case "pink":
+                        return "to-pink-500";
+                    default:
+                        return null;
+                }
+            default:
+                return null;
+
+        }
+    }
+}

@@ -1,0 +1,39 @@
+﻿@using BillingService
+@model InvoiceResponse
+<div class="mx-auto py-10 px-10 xl:px-56 font-bold pt-48" id="features">
+	@if (Model.IsCompleted)
+	{
+		<h2 class="text-3xl md:text-4xl lg:text-5xl text-center font-extrabold mb-2">Success!</h2>
+		<p class="text-2xl md:text-3xl lg:text-4xl  pr-4 pl-4 mb-6 text-left xl:text-center pt-2">
+			Woohoo! You are now premium! Thank you so much for helping us out! ❤️❤️❤️
+		</p>
+	}
+	else
+	{
+		@switch (Model.Status)
+		{
+			case "New" or "Processing":
+				<h2 class="text-3xl md:text-4xl lg:text-5xl text-center font-extrabold mb-2">Not confirmed yet!</h2>
+				<p class="text-2xl md:text-3xl lg:text-4xl  pr-4 pl-4 mb-6 text-left xl:text-center pt-2">
+					Once we receive payment and enough confirmations on the blockchain, we'll email you! Shouldn't take more than an hour ❤️❤️❤️
+				</p>
+				break;
+			case "Paid":
+				<h2 class="text-3xl md:text-4xl lg:text-5xl text-center font-extrabold mb-2">Not confirmed yet!</h2>
+				<p class="text-2xl md:text-3xl lg:text-4xl  pr-4 pl-4 mb-6 text-left xl:text-center pt-2">
+					We received payment but not there aren't enough confirmations on the blockchain at the moment, we'll email you once everything is cool! Shouldn't take more than an hour ❤️❤️❤️
+				</p>
+				break;
+			default:
+				<h2 class="text-3xl md:text-4xl lg:text-5xl text-center font-extrabold mb-2">Oh oh.</h2>
+				<p class="text-2xl md:text-3xl lg:text-4xl  pr-4 pl-4 mb-6 text-left xl:text-center pt-2">
+					We couldn't verify the payment went through :(
+					If you did pay though, don't worry, you can email me at dooshdoneky2@gmail.com and I will make it right within 12 hours, and I'll add double the coins
+					for your patience! Sorry bout this 🥺
+				</p>
+				break;
+		}
+
+	}
+</div>
+

@@ -1,0 +1,57 @@
+﻿@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="items-center justify-center flex font-bold">
+    <div class="text-green-500 p-4 sm:p-16 rounded-xl shadow-2xl">
+        <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">@ViewData["Title"]</h2>
+        <form class="space-y-5 mb-4" asp-controller="Account" asp-action="Register" asp-route-returnUrl="@ViewData["returnUrl"]" method="post" role="form">
+            @*        <div asp-validation-summary="All" class="text-danger"></div>*@
+            <div class="text-left">
+                <label class="text-xl block mb-3 font-bold" asp-for="Name"></label>
+                <input class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500" asp-for="Name" />
+                <span asp-validation-for="Name"></span>
+            </div>
+
+            <div class="text-left">
+                <label class="text-xl block mb-3 font-bold" asp-for="Email"></label>
+                <input class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500" asp-for="Email" />
+                <span asp-validation-for="Email"></span>
+            </div>
+            <div class="text-left">
+                <label class="text-xl block mb-3 font-bold" asp-for="Password"></label>
+                <input class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500" asp-for="Password" />
+                <span asp-validation-for="Password"></span>
+            </div>
+            <div class="text-left">
+                <label class="text-xl block mb-3 font-bold" asp-for="ConfirmPassword"></label>
+                <input class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500" asp-for="ConfirmPassword" />
+                <span asp-validation-for="ConfirmPassword"></span>
+            </div>
+            <div class="text-left">
+                <div class="g-recaptcha" data-sitekey="6LfNzfEZAAAAAGCxPlduEQ1PdsPgkno3zvrgu9_P" id="recaptcha_widget"></div>
+                <span asp-validation-for="RecaptchaToken"></span>
+            </div>
+            <div>
+                <button class="block w-full bg-green-700 hover:bg-green-600 p-4 rounded text-gray-700 transition duration-300" type="submit">
+                    <span>
+                        <p class="font-bold">Register</p>
+                    </span>
+                </button>
+            </div>
+        </form>
+        <div class="text-left">
+            <h2 class="text-lg">Requirements</h2>
+            <ol class="list-decimal pl-4">
+                <li>Use a unique password that you haven't used for any other sites</li>
+                <li>Username cannot contain the "@@" symbol</li>
+                <li>Password must be at least, 6 characters long. You must include at least one, uppercase letter, digit and an unique symbol.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="https://www.google.com/recaptcha/api.js"></script>
+}

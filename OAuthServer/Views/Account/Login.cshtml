@@ -1,0 +1,107 @@
+﻿@using System.Collections.Generic
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Authentication
+@model LoginViewModel
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    ViewData["Title"] = "Login";
+}
+<div class="items-center justify-center flex font-bold">
+    <div class="text-green-500 p-4 sm:p-16 rounded-xl shadow-2xl">
+        <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">@ViewData["Title"]</h2>
+        <div class="md:flex">
+            <form class="space-y-5 md:w-11/12 mb-4 md:pr-10" asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" role="form">
+                <div asp-validation-summary="All" class="text-left"></div>
+                <div class="text-left">
+                    <label class="text-xl block mb-3 font-bold">Username or Email</label>
+                    <input class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500" asp-for="Identifier" />
+                    <span asp-validation-for="Identifier"></span>
+                </div>
+
+
+                <div class="text-left">
+                    <label class="text-xl text-left block mb-3 font-bold" asp-for="Password"></label>
+                    <input class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500" asp-for="Password" />
+                    <span asp-validation-for="Password"></span>
+                </div>
+                <div class="text-left text-lg">
+                    <input asp-for="RememberMe" />
+                    <label asp-for="RememberMe"></label>
+                </div>
+                <div class="text-left">
+                    <div class="g-recaptcha" data-sitekey="6LfNzfEZAAAAAGCxPlduEQ1PdsPgkno3zvrgu9_P" id="recaptcha_widget"></div>
+                    <span asp-validation-for="RecaptchaToken"></span>
+                </div>
+
+                <div>
+                    <button class="block w-full bg-green-700 hover:bg-green-600 p-4 rounded text-gray-700 transition duration-300" type="submit">
+                        <span>
+                            <p class="font-bold">Login</p>
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+
+            <div class="md:text-center">
+                <section>
+                    @{
+                        var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+                        if (loginProviders.Count != 0)
+                        {
+                            <div>
+                                <label class="text-xl block mb-3 md:mb-2 font-bold pb-3 md:pb-0">Login using an external provider instead</label>
+
+                                <form asp-controller="Account" asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" role="form">
+                                    <div>
+                                        @foreach (var provider in loginProviders)
+                                        {
+                                            <button type="submit" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account" class="mb-3 block w-full bg-gray-700 hover:bg-gray-600 p-4 rounded transition duration-300">
+                                                <span class="flex">
+                                                    @switch (provider.Name)
+                                                    {
+                                                        case "Discord":
+                                                            <img class="mx-auto h-10" src="https://discord.com/assets/ff41b628a47ef3141164bfedb04fb220.png" />
+                                                            break;
+                                                        case "Reddit":
+                                                            <img class="mx-auto h-10" src="https://www.redditinc.com/assets/images/site/logo.svg" />
+                                                            break;
+                                                        default:
+                                                            <p class="font-bold mx-auto text-green-500">Login through @provider.Name</p>
+                                                            break;
+                                                    }
+
+                                                </span>
+                                            </button>
+                                        }
+
+                                    </div>
+                                </form>
+                                <p class="text-lg text-left font-bold p-2 pt-5">
+                                    Please do note, we are not affiliated with any of the external login providers. All trademarks belong to their respective owners.
+                                </p>
+                            </div>
+                        }
+                    }
+                </section>
+            </div>
+        </div>
+
+        <p class="text-lg p-2 pt-5">
+            <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]">Register for an account!</a>
+        </p>
+        <p class="text-lg p-2">
+
+            <a asp-action="ForgotPassword">Forgot your password?</a>
+        </p>
+        <p class="text-lg pt-2">
+            <a asp-action="ResendConfirmationEmail">Resend confirmation email</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script src="https://www.google.com/recaptcha/api.js"></script>
+}

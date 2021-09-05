@@ -1,0 +1,47 @@
+﻿@using Microsoft.Extensions.Primitives
+@model AuthorizeViewModel
+@{
+    ViewData["Title"] = "Authorize";
+}
+<div class="items-center justify-center flex font-bold">
+    <div class="text-green-500 p-4 sm:p-16 rounded-xl shadow-2xl">
+        <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">@ViewData["Title"]</h2>
+
+        <h2 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-left">Do you want to grant <strong class="text-blue-900">@Model.ApplicationName</strong> access to your data? </h2>
+        @if (Model.Scope.Contains("openid profile"))
+        {
+            <div class="mt-4 space-x-3 flex text-left text-pink-600 text-xl md:text-2xl lg:text-3xl font-extrabold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3>View your email address, your username and your unique id</h3>
+            </div>
+        }
+        @if (Model.Scope.Contains("dinglevalley_client_api"))
+        {
+            <div class="mt-4 space-x-3 flex text-left text-pink-600 text-xl md:text-2xl lg:text-3xl font-extrabold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3>Act as a client application so that you can access our services</h3>
+            </div>
+        }
+        <div class="mt-4 space-x-3 flex text-left text-purple-600 text-xl md:text-2xl lg:text-3xl font-extrabold">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+            <h3>Insert shameless discord style joke here</h3>
+        </div>
+        <form asp-controller="Authorization" asp-action="Authorize" method="post">
+            @* Flow the request parameters so they can be received by the Accept/Reject actions: *@
+            @foreach (var parameter in Context.Request.HasFormContentType ?
+            (IEnumerable<KeyValuePair<string, StringValues>>)Context.Request.Form : Context.Request.Query)
+            {
+                <input type="hidden" name="@parameter.Key" value="@parameter.Value" />
+            }
+
+            <input class="block w-full my-4 bg-green-700 hover:bg-green-600 p-4 rounded text-gray-700 transition duration-300" name="submit.Accept" type="submit" value="Yes" />
+            <input class="block w-full bg-green-700 hover:bg-green-600 p-4 rounded text-gray-700 transition duration-300" name="submit.Deny" type="submit" value="No" />
+        </form>
+    </div>
+</div>

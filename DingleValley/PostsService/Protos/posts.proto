@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option csharp_namespace = "PostsService";
+
+package posts;
+
+
+service Poster {
+  rpc MakePost (Post) returns (PostResponse);
+  rpc MakeCategory (Category) returns (MakeCategoryResponse);
+  rpc GetFeed (google.protobuf.Empty) returns (stream Post);
+  rpc GetCategoryPosts (CategoryPostsRequest) returns (stream Post);
+  rpc GetPost (PostRequest) returns (Post);
+  rpc SearchCategories (SearchCategoriesRequest) returns (stream Category);
+  rpc GetUserPosts (UserPostRequest) returns (stream Post);
+  rpc DeletePost (DeletePostRequest) returns (DeletePostResponse);
+
+}
+message DeletePostRequest{
+	string post_id =1;
+	string user_id=2;
+}
+message DeletePostResponse{
+	bool succeeded = 1;
+}
+message UserPostRequest{
+	string user_id = 1;
+}
+message MakeCategoryResponse{
+	bool succeeded = 1;
+}
+message Category {
+	string category_name = 1;
+	string owner_user_id = 2;
+	string description = 3;
+	repeated string allowed_urls=4;
+}
+message Post {
+	string post_id = 1;
+	string title = 2;
+	google.protobuf.Timestamp postTimestamp = 3;
+	string content = 4;
+	int32 clouts = 5;
+	string category = 6;
+	bool is_ad = 7;
+	bool is_from_premium = 8;
+	string owner_user_id = 9;
+	message configuration_data
+	{
+		string primary_color = 1;
+		string secondary_color = 2;
+		string tertiary_color = 3;
+		google.protobuf.Int32Value column_size = 4;
+		bool has_gradient = 5;
+		google.protobuf.Int32Value boost = 6;
+	}
+	configuration_data post_configuration = 10;
+}
+message CategoryPostsRequest{
+	string category = 1;
+}
+message PostRequest{
+	string post_id = 1;
+}
+message PostResponse{
+	oneof result 
+	{
+		string error = 1;
+		string post_id = 2;
+	}
+}
+message SearchCategoriesRequest {
+	string query = 1;
+}

@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+option csharp_namespace = "CoinService";
+
+package coiner;
+
+service Coiner {
+  rpc IssueCoins (IssueCoinsRequest) returns (IssueCoinsResponse);
+  rpc ShareCoins (ShareCoinsRequest) returns (ShareCoinsResponse);
+  rpc MakePremium (MakePremiumRequest) returns (MakePremiumResponse);
+  rpc DeductCoins (DeductCoinRequest) returns (DeductCoinResponse);
+  rpc GetUserStats (UserStatsRequest) returns (UserStatsResponse);
+  rpc MakeInvoice (MakeInvoiceRequest) returns (MakeInvoiceResponse);
+  rpc GetInvoiceInfo (GetInvoiceInfoRequest) returns (GetInvoiceInfoResponse);
+}
+message GetInvoiceInfoRequest{
+	oneof identifier{
+		string invoice_id = 1;
+		string order_id = 2;
+	}
+}
+message GetInvoiceInfoResponse{
+	string user_id = 1;
+	string email = 2;
+	bool succeeded = 3;
+	string invoice_id = 4;
+}
+message MakeInvoiceRequest{
+	string invoice_id = 1;
+	string user_id = 2;
+	string email = 3;
+	string order_id = 4;
+}
+message MakeInvoiceResponse{
+	bool succeeded = 1;
+}
+message DeductCoinRequest {
+	string user_id = 1;
+	int32 amount = 2;
+}
+message DeductCoinResponse {
+	int32 coins = 1;
+}
+message MakePremiumRequest {
+	string invoice_id = 1;
+}
+message MakePremiumResponse {
+	bool succeeded = 1;
+}
+message IssueCoinsRequest {
+  int32 coins = 1;
+  string user_id = 2;
+}
+message IssueCoinsResponse {
+	int32 coins = 1;
+}
+message ShareCoinsRequest {
+  int32 coins = 1;
+  string first_user_id = 2;
+  string second_user_id = 3;
+}
+message ShareCoinsResponse {
+	bool succeeded = 1;
+}
+message UserStatsRequest{
+	string user_id =1;
+}
+message UserStatsResponse{
+	bool succeeded = 1;
+	int32 coins = 2;
+	bool is_premium = 3;
+	bool is_partner = 4;
+}

@@ -1,0 +1,43 @@
+﻿<div class="relative inline-block">
+    <div class="w-56 text-left">
+        <button @onclick="ToggleMenu" type="button" class="inline-flex justify-between w-full rounded-md py-3 px-4 bg-indigo-900 font-bold text-yellow-500 focus:outline-none" aria-expanded="true" aria-haspopup="true">
+            @if(Title is not null)
+            {
+                <h3>@Title</h3>
+            }
+            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+        </button>
+    </div>
+    @if (isMenuVisible)
+    {
+        <div class="mt-2 w-56 rounded-md shadow-lg bg-gray-900 ring-1 ring-white ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+            @foreach (string option in Options)
+            {
+                <div class="py-1 hover:bg-gray-800">
+                    <button @onclick="() => OnClickHandler(option)" class="text-gray-600 font-extrabold block px-4 pr-40 py-2 text-sm focus:outline-none">@option</button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnClick { get; set; }
+    [Parameter]
+    public HashSet<string> Options { get; set; }
+    [Parameter]
+    public string Title { get; set; }
+    private bool isMenuVisible = false;
+    private void ToggleMenu()
+    {
+        isMenuVisible = !isMenuVisible;
+    }
+    private async Task OnClickHandler(string selectedOption)
+    {
+        await OnClick.InvokeAsync(selectedOption.ToLower());
+        ToggleMenu();
+    }
+}

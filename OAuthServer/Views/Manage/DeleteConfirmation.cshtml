@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "Account deletion";
+}
+
+<div class="items-center justify-center flex font-bold">
+    <div class="text-green-500 p-4 sm:p-16 rounded-xl shadow-2xl">
+        <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 md:mb-10">Confirmation</h2>
+
+        <h3 class="text-2xl md:text-3xl font-bold mb-6">Do you really want to delete your account permenantly? This action cannot be reversed :(</h3>
+
+        <a class="block w-full text-lg bg-red-800 hover:bg-red-700 p-4 rounded text-gray-400 transition duration-300 mb-3" asp-action="Delete" asp-controller="Manage">Yes</a>
+        <a class="block w-full text-lg bg-green-700 hover:bg-green-600 p-4 rounded text-gray-700 transition duration-300" asp-action="Index" asp-controller="Manage">No</a>
+    </div>
+</div>

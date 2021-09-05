@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Our Privacy Policy";
+}
+<div class="items-center justify-center flex font-bold">
+    <div class="text-green-500 p-4 sm:p-16 rounded-xl shadow-2xl">
+        <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">@ViewData["Title"]</h2>
+        <div class="text-left font-bold">
+            <h4 class="mb-2 text-pink-600 text-2xl">What data we collect</h4>
+            <h6 class="mb-2 text-xl">We only collect data that you provide us during registration, Your username, password and your email. We will also keep track of any data that you provide for different services (ex- your posts). We do not collect any other data</h6>
+            <h4 class="mb-2 text-pink-600 text-2xl">How the data is stored</h4>
+            <h6 class="mb-2 text-xl">The password you give us is securely hashed before storage. Your email and username are not hashed</h6>
+            <h4 class="mb-2 text-pink-600 text-2xl">Cookies and other tracking mechanisms</h4>
+            <h6 class="mb-2 text-xl">The site uses cookies and/or JWT tokens to keep track of each user</h6>
+            <h4 class="mb-2 text-pink-600 text-2xl">Who has access to my data?</h4>
+            <h6 class="mb-2 text-xl">Currently we do not allow third parties to access any of your information</h6>
+            <h4 class="mb-2 text-pink-600 text-2xl">Request your data</h4>
+            <h6 class="mb-2 text-xl">You can view all the sensitive data we have about you or delete your account anytime at <a asp-action="Index" asp-controller="Manage">Account</a></h6>
+        </div>
+    </div>
+</div>
+

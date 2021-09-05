@@ -1,0 +1,359 @@
+﻿@page "/makepost"
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager Navigation
+<div class="items-center justify-center flex">
+    <div class="text-green-500 p-5 rounded shadow-2xl w-full sm:w-11/12">
+
+        <h2 class="text-3xl font-bold mb-5">Make a post</h2>
+        @if (isBtnDisabled && postSuccess)
+        {
+            <div class="flex bg-gray-800 mb-5">
+                <h3 class="text-xl block mb-3 font-bold pt-2 pl-3 pr-3">Success!</h3>
+            </div>
+        }
+        else if (!postSuccess && error is not null)
+        {
+            <h3 class="text-xl text-red-500 block mb-3 font-bold">Error: @error</h3>
+        }
+        <EditForm class="space-y-5" Model="@postModel" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <div>
+                <label class="block mb-3 font-bold">Post Title</label>
+                <input @bind="postModel.Title" @bind:event="oninput"
+                       class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500" />
+                <ValidationMessage For="() => postModel.Title" />
+            </div>
+            <div>
+                <label class="block mb-3 font-bold">Category</label>
+                <input @onkeyup="@(() => @SearchForCategories(postModel.Category))"
+                       @bind="postModel.Category" class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500 mb-1"
+                       @bind:event="oninput" />
+                @if (postModel.Category is not null && postModel.Category.Length > 0)
+                {
+                    <div class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500">
+                        @if (categorySuggestions.Count > 0)
+                        {
+                            <h3 class="font-bold m-1">Suggestions</h3>
+                            @foreach (var category in categorySuggestions)
+                            {
+                                <button type="button" class="focus:outline-none m-1 block hover:bg-gray-700 outline-none" @onclick="@(() => postModel.Category = category.CategoryName)">@category.CategoryName</button>
+                            }
+                        }
+                        else if (isInitializing)
+                        {
+                            <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md bg-rose-600 hover:bg-rose-500 focus:border-rose-700 active:bg-rose-700 transition ease-in-out duration-150 cursor-not-allowed" disabled>
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="--darkreader-inline-fill:none;" data-darkreader-inline-fill="">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="--darkreader-inline-stroke:currentColor;" data-darkreader-inline-stroke=""></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style="--darkreader-inline-fill:currentColor;" data-darkreader-inline-fill=""></path>
+                                </svg>
+                                Loading suggestions...
+                            </button>
+                        }
+                        else
+                        {
+                            <h3 class="font-bold m-1">Nothing Found :(</h3>
+                        }
+                    </div>
+                }
+                <ValidationMessage For="() => postModel.Category" />
+            </div>
+            <div>
+                <label class="block mb-3 font-bold resize">Description</label>
+                <textarea @bind="postModel.Content" @bind:event="oninput" class="h-64 w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500" />
+                <ValidationMessage For="() => postModel.Content" />
+            </div>
+            <div class="w-full text-yellow-500 bg-gray-600 p-3 mb-1 rounded-lg">
+                <div class="flex flex-center justify-between">
+                    <h3 class="font-bold text-xl m-1">Customization Options</h3>
+                    <button @onclick="ToggleCustomizationMenu" type="button" class="rounded-md p-1 focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+                @if (isCustomizationMenuVisible)
+                {
+                    <UserstatsComponent UserStats="userStats" Initializing="isInitializing" Error="@userStatsError"></UserstatsComponent>
+                    <h3 class="font-bold text-xl m-1 mb-2">Post Preview</h3>
+                    <PostComponent ShowOptions="false"
+                               Post="postModel"
+                               RewardClaimed="false"
+                               IsPreview="true">
+                    </PostComponent>
+                    <div class="xl:flex bg-gray-700 mt-2 p-1 rounded-xl">
+                        <div class="ml-1 mt-2 mb-2 2xl:w-1/3">
+                            <h3 class="font-bold text-xl mb-2">Grid Options</h3>
+                            <div class="flex flex-1 space-x-3">
+                                <div>
+                                    <h3 class="font-bold text-lg mt-2 mb-2">Column Size</h3>
+                                    <h3 class="font-bold mt-1 mb-2 text-red-400">Applied on large screens only</h3>
+                                    <InputNumber @onmouseup="CalculateCost" @onkeyup="CalculateCost" @bind-Value="config.ColumnSize" class="w-1/2 bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500 mb-1" />
+                                    <ValidationMessage For="() => config.ColumnSize" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3 w-1/3 mt-3 ml-1">
+                                <div class="bg-gray-500 rounded-lg p-4"></div>
+                                <div class="bg-gray-500 rounded-lg p-4"></div>
+                                <div class="bg-gray-500 rounded-lg p-4"></div>
+                                <div class="bg-gradient-to-r from-red-600 to-red-400 @GridPreviewCss rounded-lg p-4"></div>
+                                <div class="bg-gray-500 rounded-lg p-4"></div>
+                                <div class="bg-gray-500 rounded-lg p-4"></div>
+                                <div class="bg-gray-500 rounded-lg p-4"></div>
+                                <div class="bg-gray-500 rounded-lg p-4"></div>
+                                <div class="bg-gray-500 rounded-lg p-4"></div>
+                            </div>
+                        </div>
+                        <div class="ml-1 mt-2 mb-2 font-bold 2xl:w-1/3">
+                            <h3 class="text-xl mb-2">Background Options</h3>
+                            <h3 class="text-lg mt-2 mb-2">Gradient Colors</h3>
+                            <div class="flex flex-1 space-x-3">
+                                <div>
+                                    <div class="flex space-x-5 mb-2">
+                                        <h2 class="w-1/2 text-green-500 mt-4 mb-2">Primary Color</h2>
+                                        <GenericOptionsComponent Title="Choose a color" Options="customizationColors" OnClick="SetPrimaryColor"></GenericOptionsComponent>
+                                    </div>
+                                    <div class="flex space-x-5 mb-2">
+                                        <h2 class="w-1/2 text-green-500 mt-4 mb-2">Secondary Color</h2>
+                                        <GenericOptionsComponent Title="Choose a color" Options="customizationColors" OnClick="SetSecondaryColor"></GenericOptionsComponent>
+                                    </div>
+                                    <div class="flex space-x-5 mb-2">
+                                        <h2 class="w-1/2 text-green-500 mt-4 mb-2">Tertiary Color</h2>
+                                        <GenericOptionsComponent Title="Choose a color" Options="customizationColors" OnClick="SetTertiaryColor"></GenericOptionsComponent>
+                                    </div>
+                                    <div class="flex space-x-5 mt-4">
+                                        <div class="p-10 @PrimaryCss border-2 rounded outline-none border-purple-500"></div>
+                                        <div class="p-10 @SecondaryCss border-2 rounded outline-none border-purple-500"></div>
+                                        <div class="p-10 @TertiaryCss border-2 rounded outline-none border-purple-500"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex mt-3 text-green-500">
+                                <div>
+                                    <input type="checkbox" @onchange="eventArgs => { config.HasGradient = (bool)eventArgs.Value; CalculateCost(); }" />
+                                </div>
+                                <div class="ml-1">
+                                    <label>Enable gradient</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ml-1 mt-2 mb-2 font-bold 2xl:w-1/3">
+                            <h3 class="text-xl mb-2">Boost</h3>
+                            <h3 class="text-lg mt-2 mb-2">Give users extra coins for interacting with your post</h3>
+                            <InputNumber step="100" @onmouseup="CalculateCost" @onkeyup="CalculateCost" @bind-Value="config.Boost" class="w-1/2 bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500 mb-1" />
+                        </div>
+                    </div>
+                    <div class="bg-pink-800 p-10 w-full rounded-xl mt-5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" width="192" height="181" viewBox="0 0 192 181" fill="none">
+                            <g clip-path="url(#clip0)">
+                                <path d="M184.439 86.504C184.68 133.697 145.504 172.204 96.876 172.452C48.2486 172.7 8.68183 134.595 8.44114 87.4016C8.20045 40.2085 47.3765 1.70189 96.0039 1.45389C144.631 1.20588 184.198 39.3109 184.439 86.504Z" fill="#C9887A" stroke="black" stroke-width="2" />
+                                <path d="M183.971 92.8177C184.193 136.283 149.321 171.684 106.1 171.905C62.879 172.125 27.6483 137.081 27.4267 93.6161C27.205 50.1506 62.0763 14.7495 105.298 14.5291C148.519 14.3087 183.749 49.3523 183.971 92.8177Z" fill="#BFB809" stroke="black" stroke-width="3" />
+                                <path d="M99.1747 129.311C98.8709 129.412 98.6687 129.31 98.568 129.006L77.9879 66.3472C77.9073 66.1042 77.9885 65.9424 78.2315 65.8618L95.2405 60.1192C98.5614 58.9504 101.861 58.7327 105.138 59.4662C108.476 60.1795 111.429 61.6613 113.996 63.9117C116.543 66.1012 118.37 68.8665 119.478 72.2076L128.152 98.3587C129.321 101.882 129.538 105.384 128.804 108.863C128.05 112.283 126.528 115.316 124.237 117.964C121.946 120.612 119.019 122.561 115.455 123.81L99.1747 129.311ZM106.118 114.567L111.768 112.693C114.015 111.948 115.636 110.534 116.631 108.451C117.687 106.347 117.852 104.202 117.127 102.016L108.423 75.7733C107.778 73.8294 106.495 72.4007 104.574 71.4871C102.693 70.4926 100.791 70.348 98.8671 71.0535L92.519 73.2602L106.118 114.567Z" fill="#300240" />
+                            </g>
+                            <defs>
+                                <clipPath id="clip0">
+                                    <rect width="190.043" height="179.065" fill="white" transform="translate(0.959045 0.969227) rotate(-0.292211)" />
+                                </clipPath>
+                            </defs>
+                        </svg>
+                        <h3 class="text-lg text-center font-bold">Total Cost: @costText</h3>
+                        <h2 class="mt-3 font-bold text-green-500 text-center">Think the calculation is wrong? <button type="button" class="font-extrabold text-indigo-500 outline-none" @onclick="CalculateCost">Click here to calculate again :D</button> </h2>
+                    </div>
+                }
+            </div>
+            <div class="text-sm ml-1">
+                <label for="agree">By continuing, you confirm that you agree to our <a href="https://auth.dinglevalley.net/home/privacy">privacy policy</a></label>
+            </div>
+            <button disabled="@isBtnDisabled" class="block w-full bg-green-700 hover:bg-green-600 p-4 rounded text-gray-800 transition duration-300">
+                <span>
+                    <p class="font-bold">@btnText</p>
+                </span>
+            </button>
+
+        </EditForm>
+    </div>
+</div>
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private Post postModel = new();
+    private bool postSuccess = false;
+    private bool submitting = false;
+    private bool isInitializing = true;
+    private string error;
+    private string btnText => postSuccess ? "Done :D" : (isBtnDisabled ? (submitting) ? "Processing..." : "You do not have enough coins :(" : "Make Post");
+    private HttpClient client;
+    private HashSet<Category> categorySuggestions = new();
+    private HashSet<Category> allCategories = new();
+    private UserStats userStats;
+    private bool isBtnDisabled => (postSuccess || submitting) ? true : (userStats.Coins - (int)cost) < 0;
+    private string userStatsError;
+    private bool isCustomizationMenuVisible = false;
+    private string GridPreviewCss => config.ColumnSize == 2 ? $"col-span-2" : null;
+    private string PrimaryCss => config.PrimaryColor is null ? "bg-green-700" : GetColorCss("Primary", config.PrimaryColor);
+    private string SecondaryCss => config.SecondaryColor is null ? "bg-blue-900" : GetColorCss("Secondary", config.SecondaryColor);
+    private string TertiaryCss => config.TertiaryColor is null ? "bg-green-500" : GetColorCss("Tertiary", config.TertiaryColor);
+    private int? cost = 0;
+    private string costText => cost is null or <= 0 ? "None" : $"{cost}";
+    private PostConfiguration config => postModel.PostConfiguration;
+    private static HashSet<string> customizationColors = new HashSet<string>()
+    {
+    "Red", "Blue", "Green", "Pink"
+    };
+    protected override async Task OnInitializedAsync()
+    {
+        postModel.PostConfiguration = new();
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+        postModel.OwnerUserId = user.Identity.Name;
+        if (!user.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo($"authentication/login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
+        }
+        client = ClientFactory.CreateClient("WebAPI");
+        try
+        {
+            allCategories = await client.GetFromJsonAsync<HashSet<Category>>($"Api/Category/SearchCategories?query=All");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+        try
+        {
+            userStats = await client.GetFromJsonAsync<UserStats>($"api/account/userstats");
+        }
+        catch (Exception)
+        {
+            userStatsError = "Failed to fetch your user stats :(";
+        }
+        isInitializing = false;
+    }
+    private void SearchForCategories(string query)
+    {
+        categorySuggestions = allCategories.Where(x => x.CategoryName.ToLower().Contains(query.ToLower())).ToHashSet();
+    }
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            submitting = true;
+            postModel.PostId = "placeholder";
+            var response = await client.PostAsJsonAsync("api/posts/makepost", postModel);
+            if (response.IsSuccessStatusCode)
+            {
+                postSuccess = true;
+            }
+            else
+            {
+                postSuccess = false;
+                var content = await response.Content.ReadAsStringAsync();
+                if (content is not null && content.Length > 0)
+                {
+                    error = content;
+                }
+                else
+                {
+                    error = response.ReasonPhrase;
+                }
+            }
+        }
+        catch (Exception)
+        {
+            error = "Something went wrong, please try again later, if this keeps happening everytime, please contact us";
+        }
+        submitting = false;
+    }
+    private void ToggleCustomizationMenu()
+    {
+        isCustomizationMenuVisible = !isCustomizationMenuVisible;
+    }
+    private void SetPrimaryColor(string color)
+    {
+        config.PrimaryColor = color;
+    }
+    private void SetSecondaryColor(string color)
+    {
+        config.SecondaryColor = color;
+    }
+    private void SetTertiaryColor(string color)
+    {
+        config.TertiaryColor = color;
+    }
+    private string GetColorCss(string mode, string color)
+    {
+        switch (mode)
+        {
+            case "Primary":
+                switch (color)
+                {
+                    case "red":
+                        return "bg-red-700";
+                    case "blue":
+                        return "bg-blue-700";
+                    case "green":
+                        return "bg-green-700";
+                    case "pink":
+                        return "bg-pink-700";
+                    default:
+                        return null;
+                }
+            case "Secondary":
+                switch (color)
+                {
+                    case "red":
+                        return "bg-red-900";
+                    case "blue":
+                        return "bg-blue-900";
+                    case "green":
+                        return "bg-green-900";
+                    case "pink":
+                        return "bg-pink-900";
+                    default:
+                        return null;
+                }
+            case "Tertiary":
+                switch (color)
+                {
+                    case "red":
+                        return "bg-red-500";
+                    case "blue":
+                        return "bg-blue-500";
+                    case "green":
+                        return "bg-green-500";
+                    case "pink":
+                        return "bg-pink-500";
+                    default:
+                        return null;
+                }
+            default:
+                return null;
+
+        }
+    }
+    private void CalculateCost()
+    {
+        cost = 0;
+        if (userStats.IsPartner)
+        {
+            cost = 0;
+            config.Boost = 500;
+            return;
+        }
+        if (config.ColumnSize == 2)
+        {
+            cost += 2500;
+        }
+        if (!userStats.IsPremium && config.HasGradient)
+        {
+            cost += 2500;
+        }
+        if (config.Boost is not null and > 0)
+        {
+            cost += (config.Boost / 100) * 1000;
+        }
+        if (cost is null or < 0)
+        {
+            cost = 0;
+        }
+    }
+}

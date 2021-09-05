@@ -1,0 +1,110 @@
+﻿@page "/search"
+@implements IDisposable
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager Navigation
+@inject ComponentApplicationState ApplicationState
+<div class="items-center justify-center flex">
+    <div class="text-green-500 p-5 sm:p-16 rounded shadow-2xl w-11/12">
+
+        <h2 class="text-3xl font-bold mb-5">Select a category</h2>
+        <form>
+            <div>
+                <label class="block mb-3 font-bold">Search</label>
+                <input @onkeyup="@(() => @SearchForCategories(categoryName))"
+                       @bind="categoryName" class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500 mb-1"
+                       @bind:event="oninput" />
+                <div class="w-full bg-gray-800 border-2 border-green-500 p-3 rounded outline-none focus:border-purple-500">
+                    @if (categoryName is not null && categoryName.Length > 0)
+                    {
+                        @if (categorySuggestions.Count > 0)
+                        {
+                            <h3 class="font-bold m-1">Results</h3>
+                            @foreach (var category in categorySuggestions)
+                            {
+                                <button class="focus:outline-none m-1 block hover:bg-gray-700 outline-none" @onclick="(()=>GetCategoryLink(category.CategoryName))">@category.CategoryName</button>
+                            }
+                        }
+                        else if (isLoading)
+                        {
+                            <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md bg-rose-600 hover:bg-rose-500 focus:border-rose-700 active:bg-rose-700 transition ease-in-out duration-150 cursor-not-allowed" disabled="">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="--darkreader-inline-fill:none;" data-darkreader-inline-fill="">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="--darkreader-inline-stroke:currentColor;" data-darkreader-inline-stroke=""></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style="--darkreader-inline-fill:currentColor;" data-darkreader-inline-fill=""></path>
+                                </svg>
+                                Loading suggestions...
+                            </button>
+                        }
+                        else
+                        {
+                            <h3 class="font-bold m-1">Nothing Found :(</h3>
+                        }
+
+                    }
+                    else if (allCategories is not null && allCategories.Count > 0)
+                    {
+
+                        <h3 class="font-bold m-1">Suggestions</h3>
+                        @foreach (var category in allCategories)
+                        {
+                            <a href="@GetCategoryLink(category.CategoryName)" class="focus:outline-none m-1 block hover:bg-gray-700 outline-none">@category.CategoryName</a>
+                        }
+
+                    }
+                    else if (isLoading)
+                    {
+                        <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md bg-rose-600 hover:bg-rose-500 focus:border-rose-700 active:bg-rose-700 transition ease-in-out duration-150 cursor-not-allowed" disabled="">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="--darkreader-inline-fill:none;" data-darkreader-inline-fill="">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="--darkreader-inline-stroke:currentColor;" data-darkreader-inline-stroke=""></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style="--darkreader-inline-fill:currentColor;" data-darkreader-inline-fill=""></path>
+                            </svg>
+                            Loading suggestions...
+                        </button>
+                    }
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@code {
+    private string categoryName;
+    private HashSet<Category> categorySuggestions = new();
+    private HashSet<Category> allCategories = new();
+    private bool isLoading = true;
+    protected override async Task OnInitializedAsync()
+    {
+        ApplicationState.OnPersisting += PersistCategories;
+        if (!ApplicationState.TryTakeAsJson<HashSet<Category>>("categories", out allCategories))
+        {
+            var client = ClientFactory.CreateClient("Public");
+            try
+            {
+                allCategories = await client.GetFromJsonAsync<HashSet<Category>>($"Api/Category/SearchCategories?query=All");
+            }
+            catch (Exception)
+            {
+                //do nothing
+            }
+        }
+        isLoading = false;
+    }
+    private void SearchForCategories(string query)
+    {
+        categorySuggestions = allCategories.Where(x => x.CategoryName.ToLower().Contains(query.ToLower())).ToHashSet();
+    }
+    private string GetCategoryLink(string category)
+    {
+        return $"category/{category.Replace(" ", "-").ToLower()}";
+    }
+    private Task PersistCategories()
+	{
+		ApplicationState.PersistAsJson("categories", allCategories);
+
+		return Task.CompletedTask;
+	}
+    void IDisposable.Dispose()
+	{
+		ApplicationState.OnPersisting -= PersistCategories;
+	}
+}
